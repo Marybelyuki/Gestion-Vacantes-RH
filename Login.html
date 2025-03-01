@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Gestión de Reclutamiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/YOUR_ACTUAL_FONT_AWESOME_KEY.js" crossorigin="anonymous"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTbMkNN45ippyU_cIwW1UE0cPiynkuJhU",
+            authDomain: "sistema-de-reclutamiento-ed4a8.firebaseapp.com",
+            projectId: "sistema-de-reclutamiento-ed4a8",
+            storageBucket: "sistema-de-reclutamiento-ed4a8.firebasestorage.app",
+            messagingSenderId: "359028698574",
+            appId: "1:359028698574:web:60c045a5333bf9380e8f9f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+    </script>
+</head>
+<body class="bg-gray-100 text-gray-900 flex justify-center items-center h-screen">
+    <div class="bg-white p-6 shadow-lg rounded-lg max-w-sm w-full text-center">
+        <h2 class="text-2xl font-bold mb-4">Iniciar Sesión</h2>
+        <input type="email" id="email" placeholder="Correo Electrónico" class="w-full p-2 border rounded mb-2">
+        <input type="password" id="password" placeholder="Contraseña" class="w-full p-2 border rounded mb-4">
+        <button id="login-btn" class="bg-blue-900 text-white px-4 py-2 rounded w-full">Ingresar</button>
+        <p class="mt-4">O inicia sesión con:</p>
+        <button id="google-login-btn" class="bg-red-600 text-white px-4 py-2 rounded w-full mt-2"><i class="fab fa-google"></i> Google</button>
+        <p class="mt-4"><a href="registro.html" class="text-blue-600 hover:underline">¿No tienes cuenta? Regístrate</a></p>
+    </div>
+
+    <script type="module">
+        document.getElementById("login-btn").addEventListener("click", async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.href = "dashboard.html";
+            } catch (error) {
+                alert("Error en inicio de sesión: " + error.message);
+            }
+        });
+
+        document.getElementById("google-login-btn").addEventListener("click", async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+                window.location.href = "dashboard.html";
+            } catch (error) {
+                alert("Error en inicio de sesión con Google: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Administración</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/YOUR_ACTUAL_FONT_AWESOME_KEY.js" crossorigin="anonymous"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTbMkNN45ippyU_cIwW1UE0cPiynkuJhU",
+            authDomain: "sistema-de-reclutamiento-ed4a8.firebaseapp.com",
+            projectId: "sistema-de-reclutamiento-ed4a8",
+            storageBucket: "sistema-de-reclutamiento-ed4a8.firebasestorage.app",
+            messagingSenderId: "359028698574",
+            appId: "1:359028698574:web:60c045a5333bf9380e8f9f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+    </script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <header class="bg-blue-900 text-white p-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold">Gestión de Usuarios</h1>
+        <nav>
+            <ul class="flex gap-4">
+                <li><a href="admin_dashboard.html" class="hover:underline"><i class="fas fa-chart-line"></i> Panel Admin</a></li>
+                <li><a href="lista_tickets.html" class="hover:underline"><i class="fas fa-tasks"></i> Tickets</a></li>
+                <li><a href="gestion_presolicitudes.html" class="hover:underline"><i class="fas fa-folder-open"></i> Presolicitudes</a></li>
+                <li><button id="logout-btn" class="hidden bg-red-600 text-white px-3 py-1 rounded">Cerrar Sesión</button></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="p-6 max-w-3xl mx-auto bg-white shadow-md rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">Usuarios Registrados</h2>
+        <div id="usuarios-list" class="space-y-4"></div>
+    </main>
+
+    <script type="module">
+        document.addEventListener("DOMContentLoaded", async () => {
+            onAuthStateChanged(auth, user => {
+                if (!user) {
+                    window.location.href = 'login.html';
+                } else {
+                    document.getElementById('logout-btn').classList.remove('hidden');
+                }
+            });
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            });
+        });
+
+        async function cargarUsuarios() {
+            const querySnapshot = await getDocs(collection(db, "usuarios"));
+            const usuariosList = document.getElementById('usuarios-list');
+            usuariosList.innerHTML = '';
+            querySnapshot.forEach(docSnap => {
+                const usuario = docSnap.data();
+                usuariosList.innerHTML += `
+                    <div class="p-4 bg-gray-100 border rounded shadow">
+                        <h3 class="text-lg font-bold">${usuario.nombre}</h3>
+                        <p>${usuario.email}</p>
+                        <p class="text-sm text-gray-600">Rol: <span class="font-bold">${usuario.rol}</span></p>
+                        <select class="w-full p-2 border rounded mt-2" id="rol-${docSnap.id}">
+                            <option value="usuario" ${usuario.rol === "usuario" ? "selected" : ""}>Usuario</option>
+                            <option value="administrador" ${usuario.rol === "administrador" ? "selected" : ""}>Administrador</option>
+                        </select>
+                        <button onclick="actualizarRol('${docSnap.id}')" class="bg-blue-900 text-white px-4 py-2 rounded mt-2">Actualizar Rol</button>
+                        <button onclick="eliminarUsuario('${docSnap.id}')" class="bg-red-600 text-white px-4 py-2 rounded mt-2 ml-2">Eliminar</button>
+                    </div>`;
+            });
+        }
+
+        async function actualizarRol(id) {
+            const nuevoRol = document.getElementById(`rol-${id}`).value;
+            const usuarioRef = doc(db, "usuarios", id);
+            await updateDoc(usuarioRef, { rol: nuevoRol });
+            alert("Rol actualizado correctamente");
+            cargarUsuarios();
+        }
+
+        async function eliminarUsuario(id) {
+            if (confirm("¿Seguro que deseas eliminar este usuario?")) {
+                await deleteDoc(doc(db, "usuarios", id));
+                alert("Usuario eliminado correctamente");
+                cargarUsuarios();
+            }
+        }
+        
+        cargarUsuarios();
+    </script>
+</body>
+</html>

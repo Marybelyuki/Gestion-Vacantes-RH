@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Presolicitudes - Gestión de Reclutamiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/YOUR_ACTUAL_FONT_AWESOME_KEY.js" crossorigin="anonymous"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTbMkNN45ippyU_cIwW1UE0cPiynkuJhU",
+            authDomain: "sistema-de-reclutamiento-ed4a8.firebaseapp.com",
+            projectId: "sistema-de-reclutamiento-ed4a8",
+            storageBucket: "sistema-de-reclutamiento-ed4a8.firebasestorage.app",
+            messagingSenderId: "359028698574",
+            appId: "1:359028698574:web:60c045a5333bf9380e8f9f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+    </script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <header class="bg-blue-900 text-white p-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold">Gestión de Presolicitudes</h1>
+        <nav>
+            <ul class="flex gap-4">
+                <li><a href="index.html" class="hover:underline"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a href="dashboard.html" class="hover:underline"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="lista_presolicitudes.html" class="hover:underline"><i class="fas fa-folder-open"></i> Lista de Presolicitudes</a></li>
+                <li><a href="perfil.html" class="hover:underline"><i class="fas fa-user"></i> Perfil</a></li>
+                <li><button id="logout-btn" class="hidden bg-red-600 text-white px-3 py-1 rounded">Cerrar Sesión</button></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="p-6 max-w-3xl mx-auto bg-white shadow-md rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">Presolicitudes Registradas</h2>
+        <div id="presolicitudes-list" class="space-y-4"></div>
+    </main>
+
+    <script type="module">
+        document.addEventListener("DOMContentLoaded", async () => {
+            onAuthStateChanged(auth, user => {
+                if (!user) {
+                    window.location.href = 'login.html';
+                } else {
+                    document.getElementById('logout-btn').classList.remove('hidden');
+                }
+            });
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            });
+        });
+
+        async function cargarPresolicitudes() {
+            const querySnapshot = await getDocs(collection(db, "presolicitudes"));
+            const presolicitudesList = document.getElementById('presolicitudes-list');
+            presolicitudesList.innerHTML = '';
+            querySnapshot.forEach(docSnap => {
+                const presolicitud = docSnap.data();
+                presolicitudesList.innerHTML += `
+                    <div class="p-4 bg-gray-100 border rounded shadow">
+                        <h3 class="text-lg font-bold">${presolicitud.titulo}</h3>
+                        <p>${presolicitud.descripcion}</p>
+                        <p class="text-sm text-gray-600">Estado: <span class="font-bold">${presolicitud.estado}</span></p>
+                        <p class="text-sm text-gray-600">Fecha: ${new Date(presolicitud.fechaRegistro).toLocaleString()}</p>
+                        <select class="w-full p-2 border rounded mt-2" id="estado-${docSnap.id}">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En revisión">En revisión</option>
+                            <option value="Aprobada">Aprobada</option>
+                            <option value="Rechazada">Rechazada</option>
+                        </select>
+                        <button onclick="actualizarEstado('${docSnap.id}')" class="bg-blue-900 text-white px-4 py-2 rounded mt-2">Actualizar Estado</button>
+                    </div>`;
+            });
+        }
+
+        async function actualizarEstado(id) {
+            const nuevoEstado = document.getElementById(`estado-${id}`).value;
+            const presolicitudRef = doc(db, "presolicitudes", id);
+            await updateDoc(presolicitudRef, { estado: nuevoEstado });
+            alert("Estado actualizado correctamente");
+            cargarPresolicitudes();
+        }
+        
+        cargarPresolicitudes();
+    </script>
+</body>
+</html>
